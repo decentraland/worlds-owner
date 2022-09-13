@@ -1,0 +1,98 @@
+version: "3"
+
+volumes:
+  content_server_storage: {}
+  nginx_storage: {}
+  bff_storage_volume: {}
+  shared_keys:
+
+services:
+  nats:
+    image: nats:2.8
+    container_name: nats
+    expose:
+      - "4222"
+      - "8222"
+    restart: always
+
+  explorer-bff:
+    image: quay.io/decentraland/explorer-bff:${EXPLORER_BFF_DOCKER_TAG:-latest}
+    working_dir: /app
+    env_file:
+      - .env
+    environment:
+      - "NATS_URL=nats://nats:4222"
+      - "CONTENT_URL=http://content-server:6969"
+      - "STORAGE_LOCATION=/app/storage"
+      - "COMMS_PROTOCOL=v3"
+    restart: always
+    expose:
+      - "3000"
+    volumes:
+      - "bff_storage_volume:/app/storage"
+    depends_on:
+      - nats
+
+  archipelago:
+    image: quay.io/decentraland/archipelago-service-worlds:${ARCHIPELAGO_DOCKER_TAG:-latest}
+    working_dir: /app
+    env_file:
+      - .env
+    environment:
+      - "NATS_URL=nats://nats:4222"
+      - "WS_ROOM_SERVICE_URL=http://room-service:3500"
+      - "WS_ROOM_SERVICE_SECRET=${WS_ROOM_SERVICE_SECRET}"
+    restart: always
+    depends_on:
+      - nats
+
+  room-service:
+    image: quay.io/decentraland/ws-room-service:${WS_ROOM_SERVICE_DOCKER_TAG:-latest}
+    working_dir: /app
+    env_file:
+      - .env
+    environment:
+      - "WS_ROOM_SERVICE_URL=http://room-service:3500"
+      - "WS_ROOM_SERVICE_SECRET=${WS_ROOM_SERVICE_SECRET}"
+    restart: always
+    depends_on:
+      - archipelago
+
+  content-server:
+    image: quay.io/decentraland/worlds-content-server:${DOCKER_TAG:-latest}
+    working_dir: /app
+    environment:
+      - RPC_URL=
+      - STORAGE_FOLDER=/app/storage
+#      - BUCKET=
+      - MARKETPLACE_SUBGRAPH_URL=
+      - HTTP_SERVER_HOST=0.0.0.0
+      - HTTP_SERVER_PORT=6969
+    env_file:
+      - .env
+    expose:
+      - "6969"
+    restart: always
+    volumes:
+      - "./storage:/app/storage/"
+
+  nginx:
+    container_name: nginx
+    image: nginx:1.21-alpine
+    ports:
+      - "81:80"
+      - "444:443"
+    command: '/bin/sh -c ''while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g "daemon off;"'''
+    volumes:
+      - ./local/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./local/nginx/conf.d:/etc/nginx/conf.d
+      - ./local/nginx/include:/etc/nginx/include
+      - ./local/nginx/auth:/etc/nginx/auth
+      - ./local/nginx/html:/etc/nginx/html
+      - shared_keys:/secrets
+    restart: always
+    depends_on:
+      - content-server
+      - explorer-bff
+      - nats
+      - archipelago
