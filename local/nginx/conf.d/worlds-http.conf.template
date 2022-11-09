@@ -1,0 +1,25 @@
+rewrite_log on;
+
+upstream content-server {
+    server content-server:6969;
+}
+
+upstream room-service {
+    server room-service:5000;
+}
+
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    '' close;
+}
+
+server {
+    listen 80 reuseport;
+
+    server_name $worlds_host;
+    client_max_body_size 256M;
+
+    root /etc/nginx/html;
+
+    include /etc/nginx/include/routes.conf;
+}

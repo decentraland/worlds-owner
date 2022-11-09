@@ -7,11 +7,13 @@ volumes:
 
 services:
   room-service:
+    container_name: worlds-owner-room-service
     image: quay.io/decentraland/ws-room-service:${WS_ROOM_SERVICE_DOCKER_TAG:-latest}
     working_dir: /app
     restart: always
 
   content-server:
+    container_name: worlds-owner-content-server
     image: quay.io/decentraland/worlds-content-server:${DOCKER_TAG:-latest}
     working_dir: /app
     environment:
@@ -28,8 +30,17 @@ services:
     volumes:
       - "./storage:/app/storage/"
 
+  certbot:
+    container_name: worlds-owner-certbot
+    image: certbot/certbot
+    restart: always
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    volumes:
+      - ./local/certbot/conf:/etc/letsencrypt
+      - ./local/certbot/www:/var/www/certbot
+
   nginx:
-    container_name: nginx
+    container_name: worlds-owner-nginx
     image: nginx:1.21-alpine
     ports:
       - "80:80"
@@ -38,9 +49,13 @@ services:
     volumes:
       - ./local/nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./local/nginx/conf.d:/etc/nginx/conf.d
+      - ./local/nginx/include:/etc/nginx/include
       - ./local/nginx/html:/etc/nginx/html
+      - ./local/certbot/conf:/etc/letsencrypt
+      - ./local/certbot/www:/var/www/certbot
       - shared_keys:/secrets
     restart: always
     depends_on:
       - content-server
       - room-service
+      - certbot
