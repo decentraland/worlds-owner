@@ -15,9 +15,7 @@ services:
     image: quay.io/decentraland/worlds-content-server:${DOCKER_TAG:-latest}
     working_dir: /app
     environment:
-      - RPC_URL=
       - STORAGE_FOLDER=/app/storage
-      - MARKETPLACE_SUBGRAPH_URL=${MARKETPLACE_SUBGRAPH_URL:-https://api.thegraph.com/subgraphs/name/decentraland/marketplace}
       - HTTP_SERVER_HOST=0.0.0.0
       - HTTP_SERVER_PORT=6969
       - HTTP_BASE_URL=https://${HOSTNAME}/content
