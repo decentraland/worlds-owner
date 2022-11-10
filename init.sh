@@ -275,4 +275,4 @@ if test $? -ne 0; then
   printMessage failed
   exit 1
 fi
-echo "## Catalyst server is up and running at SERVER_URL"
+echo "## Catalyst server is up and running at ${SERVER_URL}"
