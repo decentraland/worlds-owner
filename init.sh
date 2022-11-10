@@ -170,8 +170,14 @@ else
   exit 1
 fi
 
-echo -n "## Checking if server url is configured... "
-if test "${SERVER_URL}"; then
+echo -n "## Checking if host name is configured... "
+if test "${HOSTNAME}"; then
+  if [ "${HOSTNAME}" == "localhost" ]; then
+    SERVER_URL="http://localhost"
+  else
+    SERVER_URL="https://${HOSTNAME}"
+  fi
+  export SERVER_URL
   printMessage ok
 else
   echo -n "Failed to check the server url."
@@ -184,35 +190,43 @@ export WORLDS_CONTENT_SERVER_DOCKER_TAG=${WORLDS_CONTENT_SERVER_DOCKER_TAG:-late
 export ROOM_SERVICE_DOCKER_TAG=${ROOM_SERVICE_DOCKER_TAG:-latest}
 REGENERATE=${REGENERATE:-0}
 
+echo -n " - EMAIL:                            "
+echo -e "\033[33m ${EMAIL} \033[39m"
+echo -n " - HOSTNAME:                         "
+echo -e "\033[33m ${HOSTNAME} \033[39m"
 echo -n " - WORLDS_CONTENT_SERVER_DOCKER_TAG: "
 echo -e "\033[33m ${WORLDS_CONTENT_SERVER_DOCKER_TAG} \033[39m"
 echo -n " - ROOM_SERVICE_DOCKER_TAG:          "
 echo -e "\033[33m ${ROOM_SERVICE_DOCKER_TAG} \033[39m"
+echo -n " - SERVER_URL:                       "
+echo -e "\033[33m ${SERVER_URL} \033[39m"
+echo -n " - MARKETPLACE_SUBGRAPH_URL:         "
+echo -e "\033[33m ${MARKETPLACE_SUBGRAPH_URL} \033[39m"
 echo ""
 
-#if ! docker pull "nginx";
-#then
-#  echo -n "Failed to pull nginx"
-#  printMessage failed
-#  exit 1
-#fi
-#echo ""
-#
-#if ! docker pull "quay.io/decentraland/worlds-content-server:${WORLDS_CONTENT_SERVER_DOCKER_TAG}";
-#then
-#  echo -n "Failed to pull quay.io/decentraland/worlds-content-server:${WORLDS_CONTENT_SERVER_DOCKER_TAG}"
-#  printMessage failed
-#  exit 1
-#fi
-#echo ""
-#
-#if ! docker pull "quay.io/decentraland/ws-room-service:${ROOM_SERVICE_DOCKER_TAG}";
-#then
-#  echo -n "Failed to pull quay.io/decentraland/ws-room-service:${ROOM_SERVICE_DOCKER_TAG}"
-#  printMessage failed
-#  exit 1
-#fi
-#echo ""
+if ! docker pull "nginx";
+then
+  echo -n "Failed to pull nginx"
+  printMessage failed
+  exit 1
+fi
+echo ""
+
+if ! docker pull "quay.io/decentraland/worlds-content-server:${WORLDS_CONTENT_SERVER_DOCKER_TAG}";
+then
+  echo -n "Failed to pull quay.io/decentraland/worlds-content-server:${WORLDS_CONTENT_SERVER_DOCKER_TAG}"
+  printMessage failed
+  exit 1
+fi
+echo ""
+
+if ! docker pull "quay.io/decentraland/ws-room-service:${ROOM_SERVICE_DOCKER_TAG}";
+then
+  echo -n "Failed to pull quay.io/decentraland/ws-room-service:${ROOM_SERVICE_DOCKER_TAG}"
+  printMessage failed
+  exit 1
+fi
+echo ""
 
 if ! docker compose stop nginx; then
   echo -n "Failed to stop!"

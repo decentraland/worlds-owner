@@ -14,7 +14,7 @@ services:
 
   content-server:
     container_name: worlds-owner-content-server
-    image: quay.io/decentraland/worlds-content-server:${DOCKER_TAG:-latest}
+    image: quay.io/decentraland/worlds-content-server:${WORLDS_CONTENT_SERVER_DOCKER_TAG:-latest}
     working_dir: /app
     environment:
       - STORAGE_FOLDER=/app/storage
