@@ -55,11 +55,6 @@ leCertEmit() {
   echo "## Requesting Let's Encrypt certificate for $nginx_url... "
   domain_args=""
   domain_args="$domain_args -d ${nginx_url}"
-  staging_arg="--staging"
-
-  if [ "$CATALYST_OWNER_CHANNEL" = "stable" ]; then
-    staging_arg=""
-  fi
 
   # Select appropriate EMAIL arg
   case "$EMAIL" in
@@ -70,8 +65,8 @@ leCertEmit() {
   # wait until the server responds
   serverAlive=10
   until [ $serverAlive -lt 1 ]; do
-    echo "Checking server liveness: ${CATALYST_URL}"
-    statusCode=$(curl --insecure -I -vv -s --http1.1 --output /dev/stderr --write-out "%{http_code}" "${CATALYST_URL}")
+    echo "Checking server liveness: ${SERVER_URL}"
+    statusCode=$(curl --insecure -I -vv -s --http1.1 --output /dev/stderr --write-out "%{http_code}" "${SERVER_URL}")
     returnCode=$?
     echo ">> statusCode: ${statusCode} returnCode: ${returnCode}"
     if [ "$statusCode" -lt 500 ] && [ "$returnCode" -eq 0 ]; then
@@ -87,7 +82,6 @@ leCertEmit() {
   docker compose run --rm --entrypoint "\
             certbot certonly --webroot -w /var/www/certbot \
             --no-eff-email \
-            $staging_arg \
             $email_arg \
             $domain_args \
             --rsa-key-size $rsa_key_size \
@@ -281,4 +275,4 @@ if test $? -ne 0; then
   printMessage failed
   exit 1
 fi
-echo "## Catalyst server is up and running at $CATALYST_URL"
+echo "## Catalyst server is up and running at SERVER_URL"
