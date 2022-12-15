@@ -11,6 +11,10 @@ services:
     image: quay.io/decentraland/ws-room-service:${WS_ROOM_SERVICE_DOCKER_TAG:-latest}
     working_dir: /app
     restart: always
+    environment:
+      - MAX_USERS=100
+    env_file:
+      - .env
 
   content-server:
     container_name: worlds-owner-content-server
