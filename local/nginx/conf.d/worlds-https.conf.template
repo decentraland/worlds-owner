@@ -1,7 +1,7 @@
 rewrite_log on;
 
 upstream content-server {
-    server content-server:6969;
+    server content-server:3000;
 }
 
 upstream room-service {
